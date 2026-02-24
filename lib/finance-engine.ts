@@ -1,4 +1,4 @@
-import type { DemoMode, ForecastPoint, Transaction } from "@/lib/mock-data"
+import { getTransactions, type DemoMode, type ForecastPoint, type Transaction } from "@/lib/mock-data"
 
 type InsightSeverity = "info" | "warning" | "critical"
 
@@ -338,7 +338,12 @@ export function computeDashboardSnapshot(
     }
   }
 
-  const currentBalance = Math.max(0, BASE_BALANCE_BY_MODE[mode] + realizedNet * 0.2)
+  const seedRealizedNet = getTransactions(mode).reduce((sum, tx) => {
+    if (tx.status !== "completed") return sum
+    return sum + tx.amount
+  }, 0)
+  const balanceDeltaFromSeed = realizedNet - seedRealizedNet
+  const currentBalance = Math.max(0, BASE_BALANCE_BY_MODE[mode] + balanceDeltaFromSeed)
   const netBurn = Math.max(0, monthlyBurnRate - monthlyRevenue)
   const runwayMonths = netBurn > 0 ? currentBalance / netBurn : 24
   const volatilityFactor =
@@ -411,4 +416,3 @@ export function computeDashboardSnapshot(
     transactions: [...sorted].reverse(),
   }
 }
-
