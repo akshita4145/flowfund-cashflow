@@ -1,13 +1,12 @@
 "use client"
 
-import { AppSidebar } from "@/components/app-sidebar"
+import { DashboardShell } from "@/components/dashboard-shell"
 import { KPICards } from "@/components/kpi-cards"
 import { CashRunwayCard } from "@/components/cash-runway-card"
 import { ForecastChart } from "@/components/forecast-chart"
 import { TopDrivers } from "@/components/top-drivers"
 import { TransactionsTable } from "@/components/transactions-table"
 import { InsightBanner } from "@/components/insight-banner"
-import { DemoProvider } from "@/lib/demo-context"
 import { CalendarDays } from "lucide-react"
 
 function DashboardContent() {
@@ -19,11 +18,8 @@ function DashboardContent() {
   })
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <AppSidebar />
-
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[1400px] px-6 py-6 lg:px-8 lg:py-8">
+    <DashboardShell>
+      <div className="mx-auto max-w-[1400px] px-6 py-6 lg:px-8 lg:py-8">
           {/* Header */}
           <header className="mb-8 flex flex-col gap-1">
             <div className="flex items-center justify-between">
@@ -68,16 +64,11 @@ function DashboardContent() {
           <section aria-label="Recent transactions">
             <TransactionsTable />
           </section>
-        </div>
-      </main>
-    </div>
+      </div>
+    </DashboardShell>
   )
 }
 
 export default function Page() {
-  return (
-    <DemoProvider>
-      <DashboardContent />
-    </DemoProvider>
-  )
+  return <DashboardContent />
 }

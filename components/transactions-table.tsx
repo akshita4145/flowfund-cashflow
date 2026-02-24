@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useDemo } from "@/lib/demo-context"
-import { getTransactions } from "@/lib/mock-data"
+import { getTransactions, type Transaction } from "@/lib/mock-data"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
   Table,
@@ -29,10 +29,46 @@ type FilterStatus = "all" | "completed" | "pending" | "failed"
 
 export function TransactionsTable() {
   const { mode } = useDemo()
-  const transactions = getTransactions(mode)
+  const [transactions, setTransactions] = useState<Transaction[]>(() => getTransactions(mode))
+  const [loading, setLoading] = useState(false)
   const [typeFilter, setTypeFilter] = useState<FilterType>("all")
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("all")
   const [search, setSearch] = useState("")
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      setLoading(true)
+      try {
+        const res = await fetch(`/api/transactions?mode=${mode}`, { cache: "no-store" })
+        if (!res.ok) throw new Error("Failed")
+        const data = (await res.json()) as { transactions?: Transaction[] }
+        if (!cancelled && data.transactions) {
+          setTransactions(data.transactions)
+        }
+      } catch {
+        if (!cancelled) {
+          setTransactions(getTransactions(mode))
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    function onUpdated() {
+      void load()
+    }
+
+    void load()
+    window.addEventListener("flowfund:transactions-updated", onUpdated)
+    return () => {
+      cancelled = true
+      window.removeEventListener("flowfund:transactions-updated", onUpdated)
+    }
+  }, [mode])
 
   const filtered = useMemo(() => {
     return transactions.filter((t) => {
@@ -58,6 +94,7 @@ export function TransactionsTable() {
             </CardTitle>
             <CardDescription>
               {filtered.length} transaction{filtered.length !== 1 ? "s" : ""} found
+              {loading ? " • refreshing..." : ""}
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center gap-2">
