@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { createTransaction, listTransactions, type CreateTransactionInput } from "@/lib/demo-store"
 import type { DemoMode } from "@/lib/mock-data"
 
+export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 function parseMode(value: unknown): DemoMode | null {
@@ -12,7 +13,10 @@ function parseMode(value: unknown): DemoMode | null {
 
 export async function GET(request: Request) {
   const mode = parseMode(new URL(request.url).searchParams.get("mode")) ?? "healthy"
-  return NextResponse.json({ mode, transactions: listTransactions(mode) })
+  return NextResponse.json(
+    { mode, transactions: listTransactions(mode) },
+    { headers: { "Cache-Control": "no-store" } }
+  )
 }
 
 export async function POST(request: Request) {
@@ -45,6 +49,8 @@ export async function POST(request: Request) {
     status: body.status,
   })
 
-  return NextResponse.json({ transaction: created }, { status: 201 })
+  return NextResponse.json(
+    { transaction: created },
+    { status: 201, headers: { "Cache-Control": "no-store" } }
+  )
 }
-

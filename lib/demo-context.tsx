@@ -16,6 +16,7 @@ interface DemoContextValue {
   toggleMode: () => void
   snapshot: DashboardSnapshot | null
   snapshotLoading: boolean
+  snapshotLastUpdatedAt: string | null
   refreshSnapshot: () => void
 }
 
@@ -25,6 +26,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<DemoMode>("healthy")
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null)
   const [snapshotLoading, setSnapshotLoading] = useState(true)
+  const [snapshotLastUpdatedAt, setSnapshotLastUpdatedAt] = useState<string | null>(null)
   const [refreshTick, setRefreshTick] = useState(0)
 
   const toggleMode = () => {
@@ -46,9 +48,15 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         })
         if (!res.ok) throw new Error("Failed to load dashboard snapshot")
         const data = (await res.json()) as DashboardSnapshot
-        if (!cancelled) setSnapshot(data)
+        if (!cancelled) {
+          setSnapshot(data)
+          setSnapshotLastUpdatedAt(new Date().toISOString())
+        }
       } catch {
-        if (!cancelled) setSnapshot(null)
+        if (!cancelled) {
+          setSnapshot(null)
+          setSnapshotLastUpdatedAt(new Date().toISOString())
+        }
       } finally {
         if (!cancelled) setSnapshotLoading(false)
       }
@@ -58,17 +66,44 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       setRefreshTick((n) => n + 1)
     }
 
+    const channel =
+      typeof window !== "undefined" && "BroadcastChannel" in window
+        ? new BroadcastChannel("flowfund-demo-sync")
+        : null
+
+    function onChannelMessage() {
+      setRefreshTick((n) => n + 1)
+    }
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        setRefreshTick((n) => n + 1)
+      }
+    }, 3000)
+
     void loadSnapshot()
     window.addEventListener("flowfund:transactions-updated", onTransactionsUpdated)
+    channel?.addEventListener("message", onChannelMessage)
     return () => {
       cancelled = true
+      window.clearInterval(interval)
       window.removeEventListener("flowfund:transactions-updated", onTransactionsUpdated)
+      channel?.removeEventListener("message", onChannelMessage)
+      channel?.close()
     }
   }, [mode, refreshTick])
 
   return (
     <DemoContext.Provider
-      value={{ mode, setMode, toggleMode, snapshot, snapshotLoading, refreshSnapshot }}
+      value={{
+        mode,
+        setMode,
+        toggleMode,
+        snapshot,
+        snapshotLoading,
+        snapshotLastUpdatedAt,
+        refreshSnapshot,
+      }}
     >
       {children}
     </DemoContext.Provider>

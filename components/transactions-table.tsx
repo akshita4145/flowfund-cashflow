@@ -62,11 +62,23 @@ export function TransactionsTable() {
       void load()
     }
 
+    const channel =
+      typeof window !== "undefined" && "BroadcastChannel" in window
+        ? new BroadcastChannel("flowfund-demo-sync")
+        : null
+
+    function onChannelMessage() {
+      void load()
+    }
+
     void load()
     window.addEventListener("flowfund:transactions-updated", onUpdated)
+    channel?.addEventListener("message", onChannelMessage)
     return () => {
       cancelled = true
       window.removeEventListener("flowfund:transactions-updated", onUpdated)
+      channel?.removeEventListener("message", onChannelMessage)
+      channel?.close()
     }
   }, [mode])
 

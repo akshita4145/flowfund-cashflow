@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function TransactionQuickAdd() {
-  const { mode } = useDemo()
+  const { mode, refreshSnapshot } = useDemo()
   const [isPending, startTransition] = useTransition()
   const [status, setStatus] = useState<string | null>(null)
   const [form, setForm] = useState({
@@ -47,6 +47,12 @@ export function TransactionQuickAdd() {
         return
       }
       window.dispatchEvent(new Event("flowfund:transactions-updated"))
+      if ("BroadcastChannel" in window) {
+        const channel = new BroadcastChannel("flowfund-demo-sync")
+        channel.postMessage({ type: "transactions-updated", mode })
+        channel.close()
+      }
+      refreshSnapshot()
       setStatus(`Created ${json.transaction?.id ?? "transaction"} in ${mode} mode`)
     })
   }
