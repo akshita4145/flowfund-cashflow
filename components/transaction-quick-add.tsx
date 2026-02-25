@@ -28,11 +28,8 @@ export function TransactionQuickAdd() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode,
-          date: new Date().toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
+          // Store a real timestamp so downstream "last 24h" windows are accurate.
+          date: new Date().toISOString(),
           description: form.description,
           category: form.category,
           amount: Number(form.amount),
