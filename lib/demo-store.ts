@@ -42,9 +42,10 @@ let initialized = false
 function getDb() {
   if (db) return db
 
-  const dataDir = path.join(process.cwd(), ".data")
-  mkdirSync(dataDir, { recursive: true })
-  const dbPath = path.join(dataDir, "flowfund-demo.sqlite")
+  // Vercel serverless filesystem is read-only except /tmp.
+  const baseDir = process.env.VERCEL ? "/tmp" : path.join(process.cwd(), ".data")
+  mkdirSync(baseDir, { recursive: true })
+  const dbPath = path.join(baseDir, "flowfund-demo.sqlite")
   db = new DatabaseSync(dbPath)
   return db
 }

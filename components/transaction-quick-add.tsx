@@ -23,34 +23,45 @@ export function TransactionQuickAdd() {
   function submit() {
     setStatus(null)
     startTransition(async () => {
-      const res = await fetch("/api/transactions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode,
-          // Store a real timestamp so downstream "last 24h" windows are accurate.
-          date: new Date().toISOString(),
-          description: form.description,
-          category: form.category,
-          amount: Number(form.amount),
-          type: form.type,
-          status: form.status,
-        }),
-      })
+      try {
+        const res = await fetch("/api/transactions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode,
+            // Store a real timestamp so downstream "last 24h" windows are accurate.
+            date: new Date().toISOString(),
+            description: form.description,
+            category: form.category,
+            amount: Number(form.amount),
+            type: form.type,
+            status: form.status,
+          }),
+        })
 
-      const json = (await res.json()) as { error?: string; transaction?: { id: string } }
-      if (!res.ok) {
-        setStatus(json.error ?? "Failed to create transaction")
-        return
+        let json: { error?: string; transaction?: { id: string } } | null = null
+        try {
+          json = (await res.json()) as { error?: string; transaction?: { id: string } }
+        } catch {
+          json = null
+        }
+
+        if (!res.ok) {
+          setStatus(json?.error ?? `Failed to create transaction (${res.status})`)
+          return
+        }
+
+        window.dispatchEvent(new Event("flowfund:transactions-updated"))
+        if ("BroadcastChannel" in window) {
+          const channel = new BroadcastChannel("flowfund-demo-sync")
+          channel.postMessage({ type: "transactions-updated", mode })
+          channel.close()
+        }
+        refreshSnapshot()
+        setStatus(`Created ${json?.transaction?.id ?? "transaction"} in ${mode} mode`)
+      } catch {
+        setStatus("Failed to create transaction. Check deployment logs/API runtime.")
       }
-      window.dispatchEvent(new Event("flowfund:transactions-updated"))
-      if ("BroadcastChannel" in window) {
-        const channel = new BroadcastChannel("flowfund-demo-sync")
-        channel.postMessage({ type: "transactions-updated", mode })
-        channel.close()
-      }
-      refreshSnapshot()
-      setStatus(`Created ${json.transaction?.id ?? "transaction"} in ${mode} mode`)
     })
   }
 
