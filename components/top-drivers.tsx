@@ -7,8 +7,16 @@ import { TrendingUp, TrendingDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function TopDrivers() {
-  const { mode } = useDemo()
-  const drivers = getDrivers(mode)
+  const { mode, snapshot } = useDemo()
+  const drivers = snapshot
+    ? snapshot.categoryBreakdown.slice(0, 5).map((item) => ({
+        category: item.category,
+        amount: `$${item.spend.toLocaleString()}`,
+        change: `${item.monthOverMonthPct >= 0 ? "+" : ""}${item.monthOverMonthPct}%`,
+        changeType: item.monthOverMonthPct >= 0 ? ("increase" as const) : ("decrease" as const),
+        percentage: item.monthOverMonthPct,
+      }))
+    : getDrivers(mode)
 
   return (
     <Card className="flex flex-col transition-all duration-200 hover:shadow-md">

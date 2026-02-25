@@ -8,8 +8,27 @@ import { cn } from "@/lib/utils"
 import { AlertTriangle, Shield, Clock } from "lucide-react"
 
 export function CashRunwayCard() {
-  const { mode } = useDemo()
-  const runway = getRunway(mode)
+  const { mode, snapshot } = useDemo()
+  const fallbackRunway = getRunway(mode)
+  const runway = snapshot
+    ? {
+        months: Math.round(snapshot.metrics.runwayMonths),
+        burnRate: `$${snapshot.metrics.monthlyBurnRate.toLocaleString()}/mo`,
+        balance: `$${snapshot.metrics.currentBalance.toLocaleString()}`,
+        status:
+          snapshot.metrics.runwayMonths <= 3
+            ? ("critical" as const)
+            : snapshot.metrics.runwayMonths <= 6
+              ? ("warning" as const)
+              : ("safe" as const),
+        message:
+          snapshot.metrics.runwayMonths <= 3
+            ? `Critical: Only about ${snapshot.metrics.runwayMonths.toFixed(1)} months of runway left.`
+            : snapshot.metrics.runwayMonths <= 6
+              ? `Runway needs attention at ${snapshot.metrics.runwayMonths.toFixed(1)} months.`
+              : `Healthy runway at ${snapshot.metrics.runwayMonths.toFixed(1)} months based on current completed cash flow.`,
+      }
+    : fallbackRunway
 
   const maxMonths = 24
   const progressPercent = Math.min((runway.months / maxMonths) * 100, 100)

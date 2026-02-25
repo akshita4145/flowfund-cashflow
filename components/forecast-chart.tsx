@@ -53,8 +53,11 @@ function CustomTooltip({
 }
 
 export function ForecastChart() {
-  const { mode } = useDemo()
-  const data = useMemo(() => getForecast(mode), [mode])
+  const { mode, snapshot } = useDemo()
+  const data = useMemo(
+    () => snapshot?.forecast.points ?? getForecast(mode),
+    [snapshot, mode]
+  )
 
   // Sample data to show ~20 labels
   const sampledData = useMemo(() => {

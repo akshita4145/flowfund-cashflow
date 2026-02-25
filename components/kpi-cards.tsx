@@ -16,9 +16,55 @@ import { cn } from "@/lib/utils"
 
 const iconMap = [DollarSign, BarChart3, Flame, Zap]
 
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
 export function KPICards() {
-  const { mode } = useDemo()
-  const kpis = getKPIs(mode)
+  const { mode, snapshot } = useDemo()
+  const kpis = snapshot
+    ? [
+        {
+          label: "Total Balance",
+          value: formatCurrency(snapshot.metrics.currentBalance),
+          delta: "Live",
+          deltaType: "neutral" as const,
+          description: "updates from transactions",
+        },
+        {
+          label: "Monthly Revenue",
+          value: formatCurrency(snapshot.metrics.monthlyRevenue),
+          delta: "Live",
+          deltaType: "neutral" as const,
+          description: "completed inflows this month",
+        },
+        {
+          label: "Monthly Burn",
+          value: formatCurrency(snapshot.metrics.monthlyBurnRate),
+          delta: "Live",
+          deltaType: "neutral" as const,
+          description: "completed outflows this month",
+        },
+        {
+          label: "Net Cash Flow",
+          value: `${snapshot.metrics.monthlyNetCashFlow >= 0 ? "+" : "-"}${formatCurrency(
+            Math.abs(snapshot.metrics.monthlyNetCashFlow)
+          )}`,
+          delta: "Live",
+          deltaType:
+            snapshot.metrics.monthlyNetCashFlow > 0
+              ? ("positive" as const)
+              : snapshot.metrics.monthlyNetCashFlow < 0
+                ? ("negative" as const)
+                : ("neutral" as const),
+          description: "monthly completed net",
+        },
+      ]
+    : getKPIs(mode)
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">

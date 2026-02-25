@@ -3,15 +3,23 @@
 import { useDemo } from "@/lib/demo-context"
 import { cn } from "@/lib/utils"
 import { CheckCircle2, AlertTriangle, X } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 export function InsightBanner() {
-  const { mode } = useDemo()
+  const { mode, snapshot } = useDemo()
   const [dismissed, setDismissed] = useState(false)
 
   if (dismissed) return null
 
-  const isHealthy = mode === "healthy"
+  const topInsight = snapshot?.insights?.[0]
+  const isHealthy =
+    topInsight?.severity
+      ? topInsight.severity === "info"
+      : mode === "healthy"
+
+  useEffect(() => {
+    setDismissed(false)
+  }, [mode, topInsight?.id, topInsight?.message])
 
   return (
     <div
@@ -29,10 +37,10 @@ export function InsightBanner() {
           isHealthy ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
         )}
       >
-        {isHealthy ? (
-          <CheckCircle2 className="size-4" />
-        ) : (
-          <AlertTriangle className="size-4" />
+          {isHealthy ? (
+            <CheckCircle2 className="size-4" />
+          ) : (
+            <AlertTriangle className="size-4" />
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1">
@@ -43,13 +51,14 @@ export function InsightBanner() {
           )}
         >
           {isHealthy
-            ? "Finances on Track"
-            : "Immediate Attention Required"}
+            ? (topInsight?.title ?? "Finances on Track")
+            : (topInsight?.title ?? "Immediate Attention Required")}
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          {isHealthy
-            ? "Your cash position is strong with 18+ months of runway. Revenue is growing steadily and burn rate is under control."
-            : "Cash runway is critically low at 3 months. Burn rate has increased 15.7% while revenue dropped 18.5%. Review spend immediately."}
+          {topInsight?.message ??
+            (isHealthy
+              ? "Your cash position is strong with 18+ months of runway. Revenue is growing steadily and burn rate is under control."
+              : "Cash runway is critically low at 3 months. Burn rate has increased 15.7% while revenue dropped 18.5%. Review spend immediately.")}
         </p>
       </div>
       <button

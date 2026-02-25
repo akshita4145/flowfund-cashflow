@@ -4,7 +4,7 @@ import { computeDashboardSnapshot } from "@/lib/finance-engine"
 import { listTransactions } from "@/lib/demo-store"
 import type { DemoMode } from "@/lib/mock-data"
 
-export const runtime = "edge"
+export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 function parseMode(value: string | null): DemoMode {
