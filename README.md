@@ -12,7 +12,7 @@ It includes:
 
 ## What It Does
 
-- stores demo transactions by mode (`healthy`, `at-risk`)
+- stores demo transactions by mode (`healthy`, `at-risk`) in a local SQLite database
 - computes a dashboard snapshot from transactions
 - exposes snapshot and transactions via API routes
 - supports quick-add transaction flows in the UI
@@ -107,32 +107,30 @@ Open `http://localhost:3000`.
 
 FlowFund can be deployed to Vercel and used as the backend for the EdgeSight live demo.
 
-## Important Limitation (Current Demo Store)
+## Local Demo Store (SQLite)
 
-FlowFund currently uses an **in-memory demo store** (`lib/demo-store.ts`).
+FlowFund now uses a **local SQLite demo store** in `lib/demo-store.ts`.
 
-This means on Vercel:
+- DB file path: `.data/flowfund-demo.sqlite` (created automatically on first request)
+- seeded transactions are inserted once per mode (`healthy`, `at-risk`) if that mode has no rows yet
+- transaction writes persist across local page reloads and requests
 
-- transactions can reset to the seeded demo state
-- data can differ across pages/requests
-- behavior can appear inconsistent after cold starts or when requests hit different instances
+### Vercel caveat
 
-This is expected for in-memory storage on serverless infrastructure.
+This local SQLite file improves reliability for local development, but it is still not a durable/shared production store on serverless infrastructure.
 
-### To make it reliable on Vercel
-
-Replace the demo store with a persistent database-backed store (for example Vercel Postgres / Neon / Supabase).
+For reliable multi-instance deployments, use a managed persistent database (for example Vercel Postgres / Neon / Supabase).
 
 ## Project Structure
 
 - `app/api/dashboard/route.ts` - computed dashboard snapshot API
 - `app/api/transactions/route.ts` - transaction list/create API
 - `lib/finance-engine.ts` - metric/forecast/insight computation
-- `lib/demo-store.ts` - current in-memory transaction store
+- `lib/demo-store.ts` - local SQLite-backed demo transaction store
 - `lib/demo-context.tsx` - client-side live snapshot loading/sync
 - `components/*` - dashboard and transaction UI
 
 ## Notes
 
 - This project is a demo and uses deterministic heuristics/rules for insights.
-- For production use, add persistence, auth, and real bank/accounting integrations.
+- For production use, add a managed shared database, auth, and real bank/accounting integrations.
