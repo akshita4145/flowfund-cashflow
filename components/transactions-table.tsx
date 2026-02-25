@@ -27,6 +27,28 @@ import { cn } from "@/lib/utils"
 type FilterType = "all" | "inflow" | "outflow"
 type FilterStatus = "all" | "completed" | "pending" | "failed"
 
+function formatTransactionDate(value: string) {
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return value
+
+  // Keep old mock dates readable and show time for new ISO timestamps.
+  if (value.includes("T")) {
+    return parsed.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    })
+  }
+
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
+}
+
 export function TransactionsTable() {
   const { mode } = useDemo()
   const [transactions, setTransactions] = useState<Transaction[]>(() => getTransactions(mode))
@@ -175,7 +197,7 @@ export function TransactionsTable() {
             {filtered.map((tx) => (
               <TableRow key={tx.id} className="group">
                 <TableCell className="text-sm text-muted-foreground">
-                  {tx.date}
+                  {formatTransactionDate(tx.date)}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">
