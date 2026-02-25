@@ -7,33 +7,13 @@ import { ForecastChart } from "@/components/forecast-chart"
 import { TopDrivers } from "@/components/top-drivers"
 import { TransactionsTable } from "@/components/transactions-table"
 import { InsightBanner } from "@/components/insight-banner"
-import { CalendarDays } from "lucide-react"
+import { PageHeader } from "@/components/page-header"
 
 function DashboardContent() {
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  })
-
   return (
     <DashboardShell>
       <div className="mx-auto max-w-[1400px] px-6 py-6 lg:px-8 lg:py-8">
-          {/* Header */}
-          <header className="mb-8 flex flex-col gap-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">
-                  Overview
-                </h1>
-                <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <CalendarDays className="size-3.5" />
-                  <span>{today}</span>
-                </div>
-              </div>
-            </div>
-          </header>
+          <PageHeader title="Overview" />
 
           {/* Insight Banner */}
           <section className="mb-6" aria-label="Financial insights">

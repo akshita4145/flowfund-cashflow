@@ -10,11 +10,10 @@ import {
   Settings,
   Activity,
   CircleDollarSign,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useDemo } from "@/lib/demo-context"
-import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
 
 const navItems = [
   { label: "Overview", href: "/", icon: LayoutDashboard },
@@ -25,20 +24,52 @@ const navItems = [
   { label: "Settings", href: "/settings", icon: Settings },
 ]
 
-export function AppSidebar() {
+export function AppSidebar({
+  collapsed,
+  onToggleCollapsed,
+}: {
+  collapsed: boolean
+  onToggleCollapsed: () => void
+}) {
   const pathname = usePathname()
-  const { mode, toggleMode } = useDemo()
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
+    <aside
+      className={cn(
+        "flex h-screen shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200",
+        collapsed ? "w-20" : "w-64"
+      )}
+    >
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-6 py-5 border-b border-sidebar-border">
-        <div className="flex items-center justify-center rounded-lg bg-sidebar-primary p-1.5">
-          <CircleDollarSign className="size-5 text-sidebar-primary-foreground" />
+      <div
+        className={cn(
+          "relative flex items-center border-b border-sidebar-border py-5",
+          collapsed ? "justify-center px-3" : "justify-between gap-2.5 px-6"
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex items-center justify-center rounded-lg bg-sidebar-primary p-1.5">
+            <CircleDollarSign className="size-5 text-sidebar-primary-foreground" />
+          </div>
+          {!collapsed ? (
+            <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
+              FlowFund
+            </span>
+          ) : null}
         </div>
-        <span className="text-lg font-semibold tracking-tight text-sidebar-foreground">
-          FlowFund
-        </span>
+
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          className={cn(
+            "inline-flex size-8 items-center justify-center rounded-md text-sidebar-foreground/70 transition hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            collapsed && "absolute top-4 right-2"
+          )}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+        </button>
       </div>
 
       {/* Navigation */}
@@ -50,8 +81,11 @@ export function AppSidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  title={collapsed ? item.label : undefined}
+                  aria-label={item.label}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                    "flex items-center rounded-lg py-2.5 text-sm font-medium transition-all duration-150",
+                    collapsed ? "justify-center px-2" : "gap-3 px-3",
                     isActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
@@ -59,63 +93,13 @@ export function AppSidebar() {
                   aria-current={isActive ? "page" : undefined}
                 >
                   <item.icon className="size-[18px] shrink-0" />
-                  {item.label}
+                  {!collapsed ? item.label : null}
                 </Link>
               </li>
             )
           })}
         </ul>
       </nav>
-
-      {/* Demo Mode Toggle */}
-      <div className="border-t border-sidebar-border p-4">
-        <div className="rounded-lg bg-sidebar-accent/50 p-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/50">
-              Demo Mode
-            </span>
-            <Badge
-              variant="outline"
-              className={cn(
-                "text-[10px] font-semibold border-0",
-                mode === "healthy"
-                  ? "bg-success/15 text-success"
-                  : "bg-destructive/15 text-destructive"
-              )}
-            >
-              {mode === "healthy" ? "Healthy" : "At Risk"}
-            </Badge>
-          </div>
-          <div className="mt-3 flex items-center gap-3">
-            <span
-              className={cn(
-                "text-xs font-medium transition-colors",
-                mode === "healthy"
-                  ? "text-sidebar-foreground"
-                  : "text-sidebar-foreground/40"
-              )}
-            >
-              Healthy
-            </span>
-            <Switch
-              checked={mode === "at-risk"}
-              onCheckedChange={toggleMode}
-              aria-label="Toggle between healthy and at-risk demo data"
-              className="data-[state=checked]:bg-destructive"
-            />
-            <span
-              className={cn(
-                "text-xs font-medium transition-colors",
-                mode === "at-risk"
-                  ? "text-sidebar-foreground"
-                  : "text-sidebar-foreground/40"
-              )}
-            >
-              At Risk
-            </span>
-          </div>
-        </div>
-      </div>
     </aside>
   )
 }

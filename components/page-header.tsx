@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { CalendarDays } from "lucide-react"
+import { DemoModeToggle } from "@/components/demo-mode-toggle"
 
 export function PageHeader({
   title,
@@ -26,8 +27,10 @@ export function PageHeader({
           <span>{description ?? today}</span>
         </div>
       </div>
-      {actions ? <div className="shrink-0">{actions}</div> : null}
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+        {actions}
+        <DemoModeToggle />
+      </div>
     </header>
   )
 }
-
