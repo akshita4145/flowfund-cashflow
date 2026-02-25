@@ -16,7 +16,7 @@ function sleep(ms: number) {
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const mode = parseMode(url.searchParams.get("mode"))
-  const snapshot = computeDashboardSnapshot(mode, listTransactions(mode))
+  const snapshot = computeDashboardSnapshot(mode, await listTransactions(mode))
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream<Uint8Array>({

@@ -39,18 +39,18 @@ function validateCreateInput(input: CreateTransactionInput): string | null {
 
 export async function createTransactionAction(
   input: CreateTransactionInput
-): Promise<ActionResult<ReturnType<typeof createTransaction>>> {
+): Promise<ActionResult<Awaited<ReturnType<typeof createTransaction>>>> {
   const error = validateCreateInput(input)
   if (error) return { ok: false, error }
 
-  const created = createTransaction(input)
+  const created = await createTransaction(input)
   revalidatePath("/")
   return { ok: true, data: created }
 }
 
 export async function updateTransactionAction(
   input: UpdateTransactionInput
-): Promise<ActionResult<NonNullable<ReturnType<typeof updateTransaction>>>> {
+): Promise<ActionResult<NonNullable<Awaited<ReturnType<typeof updateTransaction>>>>> {
   if (!isDemoMode(input.mode)) return { ok: false, error: "Invalid mode." }
   if (!input.id.trim()) return { ok: false, error: "Transaction id is required." }
   if (input.amount != null && (!Number.isFinite(input.amount) || input.amount <= 0)) {
@@ -58,7 +58,7 @@ export async function updateTransactionAction(
   }
   if (input.date && !isValidDate(input.date)) return { ok: false, error: "Invalid date." }
 
-  const updated = updateTransaction(input)
+  const updated = await updateTransaction(input)
   if (!updated) return { ok: false, error: "Transaction not found." }
   revalidatePath("/")
   return { ok: true, data: updated }
@@ -71,7 +71,7 @@ export async function deleteTransactionAction(
   if (!isDemoMode(mode)) return { ok: false, error: "Invalid mode." }
   if (!id.trim()) return { ok: false, error: "Transaction id is required." }
 
-  const deleted = deleteTransaction(mode, id)
+  const deleted = await deleteTransaction(mode, id)
   if (!deleted) return { ok: false, error: "Transaction not found." }
   revalidatePath("/")
   return { ok: true, data: { id } }
@@ -82,7 +82,6 @@ export async function getDashboardSnapshotAction(
 ): Promise<ActionResult<ReturnType<typeof computeDashboardSnapshot>>> {
   if (!isDemoMode(mode)) return { ok: false, error: "Invalid mode." }
 
-  const transactions = listTransactions(mode)
+  const transactions = await listTransactions(mode)
   return { ok: true, data: computeDashboardSnapshot(mode, transactions) }
 }
-

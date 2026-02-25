@@ -14,7 +14,7 @@ function parseMode(value: unknown): DemoMode | null {
 export async function GET(request: Request) {
   const mode = parseMode(new URL(request.url).searchParams.get("mode")) ?? "healthy"
   return NextResponse.json(
-    { mode, transactions: listTransactions(mode) },
+    { mode, transactions: await listTransactions(mode) },
     { headers: { "Cache-Control": "no-store" } }
   )
 }
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Amount must be a positive number." }, { status: 400 })
   }
 
-  const created = createTransaction({
+  const created = await createTransaction({
     mode,
     date: body.date,
     description: body.description,

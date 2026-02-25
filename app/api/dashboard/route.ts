@@ -14,7 +14,7 @@ function parseMode(value: string | null): DemoMode {
 export async function GET(request: Request) {
   const url = new URL(request.url)
   const mode = parseMode(url.searchParams.get("mode"))
-  const snapshot = computeDashboardSnapshot(mode, listTransactions(mode))
+  const snapshot = computeDashboardSnapshot(mode, await listTransactions(mode))
 
   return NextResponse.json(snapshot, {
     headers: {

@@ -107,26 +107,34 @@ Open `http://localhost:3000`.
 
 FlowFund can be deployed to Vercel and used as the backend for the EdgeSight live demo.
 
-## Local Demo Store (SQLite)
+## Demo Store (Hybrid)
 
-FlowFund now uses a **local SQLite demo store** in `lib/demo-store.ts`.
+FlowFund uses a **hybrid demo store** in `lib/demo-store.ts`:
 
-- DB file path: `.data/flowfund-demo.sqlite` (created automatically on first request)
+- **Vercel Postgres** when `POSTGRES_URL` is configured
+- otherwise local SQLite
+- local DB file path: `.data/flowfund-demo.sqlite` (created automatically on first request)
 - seeded transactions are inserted once per mode (`healthy`, `at-risk`) if that mode has no rows yet
 - transaction writes persist across local page reloads and requests
 
 ### Vercel caveat
 
-This local SQLite file improves reliability for local development, but it is still not a durable/shared production store on serverless infrastructure.
+If `POSTGRES_URL` is not configured, FlowFund falls back to local SQLite (`/tmp` on Vercel), which is not durable/shared on serverless infrastructure.
 
 For reliable multi-instance deployments, use a managed persistent database (for example Vercel Postgres / Neon / Supabase).
+
+### Vercel Postgres setup (recommended)
+
+1. In the Vercel dashboard for `flowfund-cashflow`, add a **Postgres** storage integration.
+2. Redeploy the project so `POSTGRES_URL` is available at build/runtime.
+3. The app will automatically create the table and seed demo rows on first request.
 
 ## Project Structure
 
 - `app/api/dashboard/route.ts` - computed dashboard snapshot API
 - `app/api/transactions/route.ts` - transaction list/create API
 - `lib/finance-engine.ts` - metric/forecast/insight computation
-- `lib/demo-store.ts` - local SQLite-backed demo transaction store
+- `lib/demo-store.ts` - hybrid demo transaction store (Vercel Postgres or SQLite fallback)
 - `lib/demo-context.tsx` - client-side live snapshot loading/sync
 - `components/*` - dashboard and transaction UI
 
