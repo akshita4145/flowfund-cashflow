@@ -21,7 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { ArrowUpRight, ArrowDownLeft, Search } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ArrowUpRight, ArrowDownLeft, Search, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type FilterType = "all" | "inflow" | "outflow"
@@ -50,9 +51,10 @@ function formatTransactionDate(value: string) {
 }
 
 export function TransactionsTable() {
-  const { mode } = useDemo()
+  const { mode, refreshSnapshot } = useDemo()
   const [transactions, setTransactions] = useState<Transaction[]>(() => getTransactions(mode))
   const [loading, setLoading] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [typeFilter, setTypeFilter] = useState<FilterType>("all")
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("all")
   const [search, setSearch] = useState("")
@@ -117,6 +119,31 @@ export function TransactionsTable() {
       return true
     })
   }, [transactions, typeFilter, statusFilter, search])
+
+  async function removeTransaction(id: string) {
+    if (deletingId || loading) return
+    if (!window.confirm("Delete this transaction? This updates dashboards immediately.")) return
+
+    setDeletingId(id)
+    try {
+      const res = await fetch(
+        `/api/transactions?mode=${encodeURIComponent(mode)}&id=${encodeURIComponent(id)}`,
+        { method: "DELETE" }
+      )
+      if (!res.ok) return
+
+      setTransactions((prev) => prev.filter((tx) => tx.id !== id))
+      window.dispatchEvent(new Event("flowfund:transactions-updated"))
+      if ("BroadcastChannel" in window) {
+        const channel = new BroadcastChannel("flowfund-demo-sync")
+        channel.postMessage({ type: "transactions-updated", mode })
+        channel.close()
+      }
+      refreshSnapshot()
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
     <Card className="transition-all duration-200 hover:shadow-md">
@@ -191,6 +218,9 @@ export function TransactionsTable() {
               <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Status
               </TableHead>
+              <TableHead className="text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -253,12 +283,24 @@ export function TransactionsTable() {
                     {tx.status}
                   </Badge>
                 </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => void removeTransaction(tx.id)}
+                    disabled={loading || deletingId === tx.id}
+                    aria-label={`Delete transaction ${tx.id}`}
+                  >
+                    <Trash2 className="size-4" />
+                    {deletingId === tx.id ? "Deleting..." : "Delete"}
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
             {filtered.length === 0 && (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="h-24 text-center text-sm text-muted-foreground"
                 >
                   No transactions match your filters.

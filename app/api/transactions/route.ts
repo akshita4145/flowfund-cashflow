@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
 
-import { createTransaction, listTransactions, type CreateTransactionInput } from "@/lib/demo-store"
+import {
+  createTransaction,
+  deleteTransaction,
+  listTransactions,
+  type CreateTransactionInput,
+} from "@/lib/demo-store"
 import type { DemoMode } from "@/lib/mock-data"
 
 export const runtime = "nodejs"
@@ -52,5 +57,28 @@ export async function POST(request: Request) {
   return NextResponse.json(
     { transaction: created },
     { status: 201, headers: { "Cache-Control": "no-store" } }
+  )
+}
+
+export async function DELETE(request: Request) {
+  const url = new URL(request.url)
+  const mode = parseMode(url.searchParams.get("mode"))
+  const id = url.searchParams.get("id")?.trim()
+
+  if (!mode) {
+    return NextResponse.json({ error: "Invalid mode." }, { status: 400 })
+  }
+  if (!id) {
+    return NextResponse.json({ error: "Transaction id is required." }, { status: 400 })
+  }
+
+  const deleted = await deleteTransaction(mode, id)
+  if (!deleted) {
+    return NextResponse.json({ error: "Transaction not found." }, { status: 404 })
+  }
+
+  return NextResponse.json(
+    { deleted: { id } },
+    { headers: { "Cache-Control": "no-store" } }
   )
 }
